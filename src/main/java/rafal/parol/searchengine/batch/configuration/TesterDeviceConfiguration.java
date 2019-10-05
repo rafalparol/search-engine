@@ -60,7 +60,7 @@ public class TesterDeviceConfiguration {
                 .build();
     }
 
-    @Bean
+    @Bean(name="testerDeviceJobBean")
     public Job testerDeviceJob(JobCompletionNotificationListener listener, Step testerDeviceStep) {
         return jobBuilderFactory.get("testerDeviceJob")
                 .incrementer(new RunIdIncrementer())

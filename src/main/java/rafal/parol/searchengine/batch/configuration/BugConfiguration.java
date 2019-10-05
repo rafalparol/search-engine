@@ -60,7 +60,7 @@ public class BugConfiguration {
                 .build();
     }
 
-    @Bean
+    @Bean(name="bugJobBean")
     public Job bugJob(JobCompletionNotificationListener listener, Step bugStep) {
         return jobBuilderFactory.get("bugJob")
                 .incrementer(new RunIdIncrementer())
