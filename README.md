@@ -18,3 +18,20 @@ https://itnext.io/batch-processing-large-data-sets-with-spring-boot-and-spring-b
 
 With simple CSV files manual handling:
 https://www.baeldung.com/spring-app-setup-with-csv-files
+
+# Running the app
+I. Docker:
+1) Make sure you have docker properly installed.
+2) Make sure you have Maven and Java 8 (JDK 8) installed.
+3) Within the main directory of the app run: "mvn clean install" to build the app.
+4) Within the main directory of the app execute the following command to create an image with the app: 
+"docker build -t rafalparol/searchapp ."
+5) To run the container with the app execute the following command:
+"docker run -p 8090:8080 rafalparol/searchapp"
+The app and all its endpoints will be exposed at localhost:8090.
+
+II. Maven:
+1) Make sure you have Maven and Java 8 (JDK 8) installed.
+2) Within the main directory of the app run: "mvn clean install" to build the app.
+3) Within the main directory of the app run: "mvn spring-boot:run" to run the app.
+The app and all its endpoints will be exposed at localhost:8080.
