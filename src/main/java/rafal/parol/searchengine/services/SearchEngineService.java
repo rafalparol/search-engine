@@ -23,16 +23,19 @@ public class SearchEngineService {
     }
 
     private List<BasicSearchResult> getSearchResults(String countries, String devices, BiFunction<List<String>, List<String>, List<BasicSearchResult>> processFunc) {
+        return processFunc.apply(calculateCountriesToSend(countries), calculateDevicesToSend(devices));
+    }
+
+    private List<String> calculateCountriesToSend(String countries) {
         List<String> countriesSeparated = Arrays.asList(countries.toUpperCase().trim().split(SEPARATOR));
-        List<String> devicesSeparated = Arrays.asList(devices.trim().split(SEPARATOR));
-
         boolean allCountries = countriesSeparated.stream().anyMatch((String country) -> country.equals(ALL));
+        return (!allCountries) ? countriesSeparated : (new ArrayList<>());
+    }
+
+    private List<String> calculateDevicesToSend(String devices) {
+        List<String> devicesSeparated = Arrays.asList(devices.trim().split(SEPARATOR));
         boolean allDevices = devicesSeparated.stream().anyMatch((String device) -> device.equals(ALL));
-
-        List<String> countriesToSend = (!allCountries) ? countriesSeparated : (new ArrayList<>());
-        List<String> devicesToSend = (!allDevices) ? devicesSeparated : (new ArrayList<>());
-
-        return processFunc.apply(countriesToSend, devicesToSend);
+        return (!allDevices) ? devicesSeparated : (new ArrayList<>());
     }
 
     public List<BasicSearchResult> getBasicSearchResults(String countries, String devices) {

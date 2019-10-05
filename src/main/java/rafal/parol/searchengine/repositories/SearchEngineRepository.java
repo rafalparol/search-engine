@@ -30,23 +30,41 @@ public class SearchEngineRepository {
     private final String sqlStandardString2 = " " + "AND t.country IN (:countries)";
     private final String sqlStandardString3 = " " + "AND d.description IN (:devices)";
 
-    public List<BasicSearchResult> getSearchResults(List<String> countries, List<String> devices, String sqlString1, String sqlString4, RowMapper<BasicSearchResult> mapper) {
+    private String constructSQL(List<String> countries, List<String> devices, String sqlString1, String sqlString4) {
         String sqlString = "";
-        MapSqlParameterSource parameters = new MapSqlParameterSource();
 
         sqlString += sqlString1;
 
         if (!countries.isEmpty()) {
             sqlString += sqlStandardString2;
-            parameters.addValue("countries", countries);
         }
 
         if (!devices.isEmpty()) {
             sqlString += sqlStandardString3;
-            parameters.addValue("devices", devices);
         }
 
         sqlString += sqlString4;
+
+        return sqlString;
+    }
+
+    private MapSqlParameterSource constructParameters(List<String> countries, List<String> devices, String sqlString1, String sqlString4) {
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+
+        if (!countries.isEmpty()) {
+            parameters.addValue("countries", countries);
+        }
+
+        if (!devices.isEmpty()) {
+            parameters.addValue("devices", devices);
+        }
+
+        return parameters;
+    }
+
+    private List<BasicSearchResult> getSearchResults(List<String> countries, List<String> devices, String sqlString1, String sqlString4, RowMapper<BasicSearchResult> mapper) {
+        String sqlString = constructSQL(countries, devices, sqlString1, sqlString4);
+        MapSqlParameterSource parameters = constructParameters(countries, devices, sqlString1, sqlString4);
 
         return namedParameterJdbcTemplate.query(sqlString, parameters, mapper).stream().collect(Collectors.toList());
     }
