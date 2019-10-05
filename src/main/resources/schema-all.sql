@@ -13,21 +13,23 @@ CREATE TABLE IF NOT EXISTS testers (
   first_name VARCHAR(50) NOT NULL,
   last_name VARCHAR(50) NOT NULL,
   country VARCHAR(10) NOT NULL,
-  last_login TIMESTAMP
+  last_login VARCHAR(50)
 );
 
 CREATE TABLE IF NOT EXISTS testers_devices (
   tester_id BIGINT NOT NULL,
   device_id BIGINT NOT NULL,
-  PRIMARY KEY (tester_id, device_id),
-  FOREIGN KEY (tester_id) REFERENCES testers(tester_id),
-  FOREIGN KEY (device_id) REFERENCES devices(device_id)
+  PRIMARY KEY (tester_id, device_id)
+  --,
+  -- FOREIGN KEY (tester_id) REFERENCES testers(tester_id),
+  -- FOREIGN KEY (device_id) REFERENCES devices(device_id)
 );
 
 CREATE TABLE IF NOT EXISTS bugs (
   bug_id BIGINT NOT NULL PRIMARY KEY,
   device_id BIGINT NOT NULL,
-  tester_id BIGINT NOT NULL,
-  FOREIGN KEY (device_id) REFERENCES devices(device_id),
-  FOREIGN KEY (tester_id) REFERENCES testers(tester_id)
+  tester_id BIGINT NOT NULL
+  --,
+  -- FOREIGN KEY (device_id) REFERENCES devices(device_id),
+  -- FOREIGN KEY (tester_id) REFERENCES testers(tester_id)
 );
