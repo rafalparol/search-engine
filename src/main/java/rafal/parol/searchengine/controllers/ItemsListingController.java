@@ -1,6 +1,7 @@
 package rafal.parol.searchengine.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import rafal.parol.searchengine.entities.BugJPA;
@@ -20,17 +21,17 @@ public class ItemsListingController {
         this.itemsListingService = itemsListingService;
     }
 
-    @RequestMapping("/testers")
+    @GetMapping("/testers")
     public List<TesterJPA> getAllTesters() {
         return itemsListingService.getAllTesters();
     }
 
-    @RequestMapping("/devices")
+    @GetMapping("/devices")
     public List<DeviceJPA> getAllDevices() {
         return itemsListingService.getAllDevices();
     }
 
-    @RequestMapping("/bugs")
+    @GetMapping("/bugs")
     public List<BugJPA> getAllBugs() {
         return itemsListingService.getAllBugs();
     }
