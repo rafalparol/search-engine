@@ -1,90 +1,56 @@
 package rafal.parol.searchengine.repositories;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
+import rafal.parol.searchengine.entities.BugJPA;
+import rafal.parol.searchengine.entities.DeviceJPA;
+import rafal.parol.searchengine.entities.TesterJPA;
 import rafal.parol.searchengine.model.BasicSearchResult;
 import rafal.parol.searchengine.model.ExtendedSearchResult;
 
-import javax.sql.DataSource;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Repository
 public class SearchEngineRepository {
-    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    private final BugsJPARepository bugsJPARepository;
+    private final TestersJPARepository testersJPARepository;
+    private final DevicesJPARepository devicesJPARepository;
 
     @Autowired
-    public void setDataSource(DataSource dataSource) {
-        this.namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
+    public SearchEngineRepository(BugsJPARepository bugsJPARepository,
+                                  TestersJPARepository testersJPARepository,
+                                  DevicesJPARepository devicesJPARepository
+    ) {
+        this.bugsJPARepository = bugsJPARepository;
+        this.testersJPARepository = testersJPARepository;
+        this.devicesJPARepository = devicesJPARepository;
     }
 
-    private final String sqlBasicString1 = "SELECT t.first_name, t.last_name, t.country, COUNT(*) as experience FROM bugs AS b, testers AS t, devices AS d, testers_devices as r WHERE b.tester_id = t.tester_id AND b.device_id = d.device_id AND r.tester_id = t.tester_id AND r.device_id = d.device_id";
-    private final String sqlBasicString4 = " " + "GROUP BY b.tester_id ORDER BY experience DESC";
-
-    private final String sqlExtendedString1 = "SELECT t.first_name, t.last_name, t.country, d.description, COUNT(*) as experience FROM bugs AS b, testers AS t, devices AS d, testers_devices as r WHERE b.tester_id = t.tester_id AND b.device_id = d.device_id AND r.tester_id = t.tester_id AND r.device_id = d.device_id";
-    private final String sqlExtendedString4 = " " + "GROUP BY b.tester_id, b.device_id ORDER BY experience DESC";
-
-    private final String sqlStandardString2 = " " + "AND t.country IN (:countries)";
-    private final String sqlStandardString3 = " " + "AND d.description IN (:devices)";
-
-    private String constructSQL(List<String> countries, List<String> devices, String sqlString1, String sqlString4) {
-        String sqlString = "";
-
-        sqlString += sqlString1;
-
-        if (!countries.isEmpty()) {
-            sqlString += sqlStandardString2;
+    public List<BugJPA> findBugs(List<String> countries, List<String> devices) {
+        if (countries.isEmpty() && devices.isEmpty()) {
+            return bugsJPARepository.find();
+        } else if (countries.isEmpty()) {
+            return bugsJPARepository.findByDescriptions(devices);
+        } else if (devices.isEmpty()) {
+            return bugsJPARepository.findByCountries(countries);
+        } else {
+            return bugsJPARepository.findByCountriesAndDescriptions(countries, devices);
         }
-
-        if (!devices.isEmpty()) {
-            sqlString += sqlStandardString3;
-        }
-
-        sqlString += sqlString4;
-
-        return sqlString;
-    }
-
-    private MapSqlParameterSource constructParameters(List<String> countries, List<String> devices, String sqlString1, String sqlString4) {
-        MapSqlParameterSource parameters = new MapSqlParameterSource();
-
-        if (!countries.isEmpty()) {
-            parameters.addValue("countries", countries);
-        }
-
-        if (!devices.isEmpty()) {
-            parameters.addValue("devices", devices);
-        }
-
-        return parameters;
-    }
-
-    private List<BasicSearchResult> getSearchResults(List<String> countries, List<String> devices, String sqlString1, String sqlString4, RowMapper<BasicSearchResult> mapper) {
-        String sqlString = constructSQL(countries, devices, sqlString1, sqlString4);
-        MapSqlParameterSource parameters = constructParameters(countries, devices, sqlString1, sqlString4);
-
-        return namedParameterJdbcTemplate.query(sqlString, parameters, mapper).stream().collect(Collectors.toList());
     }
 
     public List<BasicSearchResult> getSearchBasicResults(List<String> countries, List<String> devices) {
-        return getSearchResults(countries, devices, sqlBasicString1, sqlBasicString4, (rs, row) -> new BasicSearchResult (
-                rs.getString(1),
-                rs.getString(2),
-                rs.getString(3),
-                rs.getInt(4)
-        ));
+        List<BugJPA> bugs = findBugs(countries, devices);
+        Map<TesterJPA, List<BugJPA>> map = bugs.stream().collect(Collectors.groupingBy(BugJPA::getTester));
+        return map.entrySet().stream().map(it -> new BasicSearchResult(it.getKey().getFirstName(), it.getKey().getLastName(), it.getKey().getCountry(), it.getValue().size())).sorted(Comparator.comparing(BasicSearchResult::getExperience, Comparator.reverseOrder())).collect(Collectors.toList());
     }
 
     public List<BasicSearchResult> getSearchExtendedResults(List<String> countries, List<String> devices) {
-        return getSearchResults(countries, devices, sqlExtendedString1, sqlExtendedString4, (rs, row) -> new ExtendedSearchResult (
-                rs.getString(1),
-                rs.getString(2),
-                rs.getString(3),
-                rs.getInt(5),
-                rs.getString(4)
-        ));
+        List<BugJPA> bugs = findBugs(countries, devices);
+        Map<TesterJPA, Map<DeviceJPA, List<BugJPA>>> map = bugs.stream().collect(Collectors.groupingBy(BugJPA::getTester, Collectors.groupingBy(BugJPA::getDevice)));
+        return map.entrySet().stream().flatMap(it -> it.getValue().entrySet().stream().map(nxt -> (BasicSearchResult)(new ExtendedSearchResult(it.getKey().getFirstName(), it.getKey().getLastName(), it.getKey().getCountry(), nxt.getValue().size(), nxt.getKey().getDescription())))).sorted(Comparator.comparing(BasicSearchResult::getExperience, Comparator.reverseOrder())).collect(Collectors.toList());
     }
 }

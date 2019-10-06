@@ -5,9 +5,6 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
-import org.springframework.batch.item.database.JdbcBatchItemWriter;
-import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
@@ -20,8 +17,7 @@ import rafal.parol.searchengine.batch.listeners.JobCompletionNotificationListene
 import rafal.parol.searchengine.batch.model.Bug;
 import rafal.parol.searchengine.batch.processors.BugItemProcessor;
 import rafal.parol.searchengine.batch.readers.BlankLineRecordSeparatorPolicy;
-
-import javax.sql.DataSource;
+import rafal.parol.searchengine.batch.writers.NoOpItemWriter;
 
 @Configuration
 public class BugConfiguration {
@@ -30,6 +26,11 @@ public class BugConfiguration {
 
     @Autowired
     public StepBuilderFactory stepBuilderFactory;
+
+    @Bean
+    public NoOpItemWriter<Bug> bugWriter() {
+        return new NoOpItemWriter<>();
+    }
 
     @Bean
     public FlatFileItemReader<Bug> bugReader() {
@@ -46,19 +47,8 @@ public class BugConfiguration {
                 .build();
     }
 
-    @Bean
-    public BugItemProcessor bugProcessor() {
-        return new BugItemProcessor();
-    }
-
-    @Bean
-    public JdbcBatchItemWriter<Bug> bugWriter(DataSource dataSource) {
-        return new JdbcBatchItemWriterBuilder<Bug>()
-                .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>())
-                .sql("INSERT INTO bugs (bug_id, device_id, tester_id) VALUES (:bugId, :deviceId, :testerId)")
-                .dataSource(dataSource)
-                .build();
-    }
+    @Autowired
+    public BugItemProcessor bugProcessor;
 
     @Bean(name="bugJobBean")
     public Job bugJob(JobCompletionNotificationListener listener, Step bugStep) {
@@ -71,11 +61,11 @@ public class BugConfiguration {
     }
 
     @Bean
-    public Step bugStep(JdbcBatchItemWriter<Bug> bugWriter) {
+    public Step bugStep(NoOpItemWriter<Bug> bugWriter) {
         return stepBuilderFactory.get("bugStep")
                 .<Bug, Bug> chunk(10)
                 .reader(bugReader())
-                .processor(bugProcessor())
+                .processor(bugProcessor)
                 .writer(bugWriter)
                 .build();
     }

@@ -3,10 +3,9 @@ package rafal.parol.searchengine.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import rafal.parol.searchengine.batch.model.Bug;
-import rafal.parol.searchengine.batch.model.Device;
-import rafal.parol.searchengine.batch.model.Tester;
-import rafal.parol.searchengine.batch.model.TesterDevice;
+import rafal.parol.searchengine.entities.BugJPA;
+import rafal.parol.searchengine.entities.DeviceJPA;
+import rafal.parol.searchengine.entities.TesterJPA;
 import rafal.parol.searchengine.services.ItemsListingService;
 
 import java.util.List;
@@ -22,22 +21,17 @@ public class ItemsListingController {
     }
 
     @RequestMapping("/testers")
-    public List<Tester> getAllTesters() {
+    public List<TesterJPA> getAllTesters() {
         return itemsListingService.getAllTesters();
     }
 
     @RequestMapping("/devices")
-    public List<Device> getAllDevices() {
+    public List<DeviceJPA> getAllDevices() {
         return itemsListingService.getAllDevices();
     }
 
-    @RequestMapping("/testers-devices")
-    public List<TesterDevice> getAllTesterDeviceRelations() {
-        return itemsListingService.getAllTesterDeviceRelations();
-    }
-
     @RequestMapping("/bugs")
-    public List<Bug> getAllBugs() {
+    public List<BugJPA> getAllBugs() {
         return itemsListingService.getAllBugs();
     }
 }

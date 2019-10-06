@@ -5,9 +5,6 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
-import org.springframework.batch.item.database.JdbcBatchItemWriter;
-import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
@@ -20,8 +17,7 @@ import rafal.parol.searchengine.batch.listeners.JobCompletionNotificationListene
 import rafal.parol.searchengine.batch.model.Tester;
 import rafal.parol.searchengine.batch.processors.TesterItemProcessor;
 import rafal.parol.searchengine.batch.readers.BlankLineRecordSeparatorPolicy;
-
-import javax.sql.DataSource;
+import rafal.parol.searchengine.batch.writers.NoOpItemWriter;
 
 @Configuration
 public class TesterConfiguration {
@@ -30,6 +26,11 @@ public class TesterConfiguration {
 
     @Autowired
     public StepBuilderFactory stepBuilderFactory;
+
+    @Bean
+    public NoOpItemWriter<Tester> testerWriter() {
+        return new NoOpItemWriter<>();
+    }
 
     @Bean
     public FlatFileItemReader<Tester> testerReader() {
@@ -46,19 +47,8 @@ public class TesterConfiguration {
                 .build();
     }
 
-    @Bean
-    public TesterItemProcessor testerProcessor() {
-        return new TesterItemProcessor();
-    }
-
-    @Bean
-    public JdbcBatchItemWriter<Tester> testerWriter(DataSource dataSource) {
-        return new JdbcBatchItemWriterBuilder<Tester>()
-                .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>())
-                .sql("INSERT INTO testers (tester_id, first_name, last_name, country, last_login) VALUES (:testerId, :firstName, :lastName, :country, :lastLogin)")
-                .dataSource(dataSource)
-                .build();
-    }
+    @Autowired
+    public TesterItemProcessor testerProcessor;
 
     @Bean(name="testerJobBean")
     public Job testerJob(JobCompletionNotificationListener listener, Step testerStep) {
@@ -71,11 +61,11 @@ public class TesterConfiguration {
     }
 
     @Bean
-    public Step testerStep(JdbcBatchItemWriter<Tester> testerWriter) {
+    public Step testerStep(NoOpItemWriter<Tester> testerWriter) {
         return stepBuilderFactory.get("testerStep")
                 .<Tester, Tester> chunk(10)
                 .reader(testerReader())
-                .processor(testerProcessor())
+                .processor(testerProcessor)
                 .writer(testerWriter)
                 .build();
     }

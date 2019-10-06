@@ -5,9 +5,6 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
-import org.springframework.batch.item.database.JdbcBatchItemWriter;
-import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
@@ -20,8 +17,7 @@ import rafal.parol.searchengine.batch.listeners.JobCompletionNotificationListene
 import rafal.parol.searchengine.batch.model.Device;
 import rafal.parol.searchengine.batch.processors.DeviceItemProcessor;
 import rafal.parol.searchengine.batch.readers.BlankLineRecordSeparatorPolicy;
-
-import javax.sql.DataSource;
+import rafal.parol.searchengine.batch.writers.NoOpItemWriter;
 
 @Configuration
 public class DeviceConfiguration {
@@ -30,6 +26,11 @@ public class DeviceConfiguration {
 
     @Autowired
     public StepBuilderFactory stepBuilderFactory;
+
+    @Bean
+    public NoOpItemWriter<Device> deviceWriter() {
+        return new NoOpItemWriter<>();
+    }
 
     @Bean
     public FlatFileItemReader<Device> deviceReader() {
@@ -46,19 +47,8 @@ public class DeviceConfiguration {
                 .build();
     }
 
-    @Bean
-    public DeviceItemProcessor deviceProcessor() {
-        return new DeviceItemProcessor();
-    }
-
-    @Bean
-    public JdbcBatchItemWriter<Device> deviceWriter(DataSource dataSource) {
-        return new JdbcBatchItemWriterBuilder<Device>()
-                .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>())
-                .sql("INSERT INTO devices (device_id, description) VALUES (:deviceId, :description)")
-                .dataSource(dataSource)
-                .build();
-    }
+    @Autowired
+    public DeviceItemProcessor deviceProcessor;
 
     @Bean(name="deviceJobBean")
     public Job deviceJob(JobCompletionNotificationListener listener, Step deviceStep) {
@@ -71,11 +61,11 @@ public class DeviceConfiguration {
     }
 
     @Bean
-    public Step deviceStep(JdbcBatchItemWriter<Device> deviceWriter) {
+    public Step deviceStep(NoOpItemWriter<Device> deviceWriter) {
         return stepBuilderFactory.get("deviceStep")
                 .<Device, Device> chunk(10)
                 .reader(deviceReader())
-                .processor(deviceProcessor())
+                .processor(deviceProcessor)
                 .writer(deviceWriter)
                 .build();
     }

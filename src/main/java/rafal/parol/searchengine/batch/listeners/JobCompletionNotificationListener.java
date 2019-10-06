@@ -8,17 +8,25 @@ import org.springframework.batch.core.listener.JobExecutionListenerSupport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import rafal.parol.searchengine.repositories.ItemsListingRepository;
+import rafal.parol.searchengine.repositories.BugsJPARepository;
+import rafal.parol.searchengine.repositories.DevicesJPARepository;
+import rafal.parol.searchengine.repositories.TestersJPARepository;
 
 @Component
 public class JobCompletionNotificationListener extends JobExecutionListenerSupport {
     private static final Logger log = LoggerFactory.getLogger(JobCompletionNotificationListener.class);
 
-    private final ItemsListingRepository itemsListingRepository;
+    private final TestersJPARepository testersJPARepository;
+    private final DevicesJPARepository devicesJPARepository;
+    private final BugsJPARepository bugsJPARepository;
 
     @Autowired
-    public JobCompletionNotificationListener(ItemsListingRepository itemsListingRepository) {
-        this.itemsListingRepository = itemsListingRepository;
+    public JobCompletionNotificationListener(TestersJPARepository testersJPARepository,
+                                             DevicesJPARepository devicesJPARepository,
+                                             BugsJPARepository bugsJPARepository) {
+        this.testersJPARepository = testersJPARepository;
+        this.devicesJPARepository = devicesJPARepository;
+        this.bugsJPARepository = bugsJPARepository;
     }
 
     @Override
@@ -27,19 +35,22 @@ public class JobCompletionNotificationListener extends JobExecutionListenerSuppo
             log.info("Job finished! Time to verify the results!");
 
             if (jobExecution.getJobInstance().getJobName().equals("testerJob")) {
-                itemsListingRepository.getAllTesters().forEach(tester -> log.info("Found " + tester + " in the database."));
+            //  testersJPARepository.findAll().forEach(tester -> log.info("Found " + tester + " in the database."));
             }
 
             if (jobExecution.getJobInstance().getJobName().equals("deviceJob")) {
-                itemsListingRepository.getAllDevices().forEach(device -> log.info("Found " + device + " in the database."));
+            //  devicesJPARepository.findAll().forEach(device -> log.info("Found " + device + " in the database."));
             }
 
             if (jobExecution.getJobInstance().getJobName().equals("testerDeviceJob")) {
-                itemsListingRepository.getAllTesterDeviceRelations().forEach(testerDevice -> log.info("Found " + testerDevice + " in the database."));
+            //  testersJPARepository.findAll().forEach(tester -> log.info("Found " + tester + " in the database."));
+            //  devicesJPARepository.findAll().forEach(device -> log.info("Found " + device + " in the database."));
             }
 
             if (jobExecution.getJobInstance().getJobName().equals("bugJob")) {
-                itemsListingRepository.getAllBugs().forEach(bug -> log.info("Found " + bug + " in the database."));
+            //  bugsJPARepository.findAll().forEach(bug -> log.info("Found " + bug + " in the database."));
+            //  testersJPARepository.findAll().forEach(tester -> log.info("Found " + tester + " in the database."));
+            //  devicesJPARepository.findAll().forEach(device -> log.info("Found " + device + " in the database."));
             }
         }
     }
