@@ -26,13 +26,13 @@ public class SearchEngineService {
         return processFunc.apply(calculateCountriesToSend(countries), calculateDevicesToSend(devices));
     }
 
-    private List<String> calculateCountriesToSend(String countries) {
+    public List<String> calculateCountriesToSend(String countries) {
         List<String> countriesSeparated = Arrays.asList(countries.toUpperCase().trim().split(SEPARATOR));
         boolean allCountries = countriesSeparated.stream().anyMatch((String country) -> country.equals(ALL));
         return (!allCountries) ? countriesSeparated : (new ArrayList<>());
     }
 
-    private List<String> calculateDevicesToSend(String devices) {
+    public List<String> calculateDevicesToSend(String devices) {
         List<String> devicesSeparated = Arrays.asList(devices.trim().split(SEPARATOR));
         boolean allDevices = devicesSeparated.stream().anyMatch((String device) -> device.equals(ALL));
         return (!allDevices) ? devicesSeparated : (new ArrayList<>());

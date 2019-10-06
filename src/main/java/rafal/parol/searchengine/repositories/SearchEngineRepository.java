@@ -8,7 +8,6 @@ import rafal.parol.searchengine.entities.TesterJPA;
 import rafal.parol.searchengine.model.BasicSearchResult;
 import rafal.parol.searchengine.model.ExtendedSearchResult;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -17,17 +16,10 @@ import java.util.stream.Collectors;
 @Repository
 public class SearchEngineRepository {
     private final BugsJPARepository bugsJPARepository;
-    private final TestersJPARepository testersJPARepository;
-    private final DevicesJPARepository devicesJPARepository;
 
     @Autowired
-    public SearchEngineRepository(BugsJPARepository bugsJPARepository,
-                                  TestersJPARepository testersJPARepository,
-                                  DevicesJPARepository devicesJPARepository
-    ) {
+    public SearchEngineRepository(BugsJPARepository bugsJPARepository) {
         this.bugsJPARepository = bugsJPARepository;
-        this.testersJPARepository = testersJPARepository;
-        this.devicesJPARepository = devicesJPARepository;
     }
 
     public List<BugJPA> findBugs(List<String> countries, List<String> devices) {
